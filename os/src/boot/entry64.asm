@@ -1,8 +1,6 @@
 	.section .text.entry
 	.globl _start
 _start:
-	lui sp, %hi(bootstacktop)
-	
 	lui     t0, %hi(boot_page_table_sv39)
     li      t1, 0xffffffffc0000000 - 0x80000000
     sub     t0, t0, t1
@@ -11,6 +9,8 @@ _start:
     or      t0, t0, t1
     csrw    satp, t0
     sfence.vma
+	
+	lui sp, %hi(bootstacktop)
 
 	lui t0, %hi(rust_main)
 	addi t0, t0, %lo(rust_main)
@@ -27,11 +27,6 @@ bootstacktop:
 	.section .data
     .align 12   # page align
 boot_page_table_sv39:
-    # 0x00000000_80000000 -> 0x80000000 (1G)
     # 0xffffffff_c0000000 -> 0x80000000 (1G)
-    .quad 0
-    .quad 0
-    #.quad (0x80000 << 10) | 0xcf # VRWXAD
-	.quad 0
-    .zero 8 * 508
+    .zero 8 * 511
     .quad (0x80000 << 10) | 0xcf # VRWXAD
