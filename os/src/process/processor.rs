@@ -47,7 +47,11 @@ impl Processor {
         self.inner().pool.add(thread);
     }
 
-    pub fn run(&self) -> ! {
+    pub fn run(&self) {
+        Thread::get_boot_thread().switch_to(&mut self.inner().idle);
+    }
+
+    pub fn idle_main(&self) -> ! {
         let inner = self.inner();
         disable_and_store();
 

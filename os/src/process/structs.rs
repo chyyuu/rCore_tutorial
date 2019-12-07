@@ -29,26 +29,42 @@ pub struct Thread {
     pub proc: Option<Arc<Process>>,
 }
 impl Thread {
+    /*
     pub fn new_idle() -> Box<Thread> {
         unsafe {
             let kstack = KernelStack::new();
             Box::new(Thread {
                 context: Context::null(),
-                kstack,
+		        kstack,
+                proc: None,
+            })
+        }
+    }
+    */
+
+    pub fn get_boot_thread() -> Box<Thread> {
+        Box::new(Thread {
+            context: Context::null(),
+            kstack: KernelStack::new_empty(),
+            proc: None,
+        })
+    }
+
+    pub fn new_kernel(entry: usize) -> Box<Thread> {
+        unsafe {
+            let kstack_ = KernelStack::new();
+            Box::new(Thread {
+                context: Context::new_kernel_thread(entry, kstack_.top(), satp::read().bits()),
+                kstack: kstack_,
                 proc: None,
             })
         }
     }
 
-    pub fn new_kernel(entry: usize, arg: usize) -> Box<Thread> {
+    pub fn append_initial_arguments(&self, args: [usize; 3]) {
         unsafe {
-            let kstack_ = KernelStack::new();
-            Box::new(Thread {
-                context: Context::new_kernel_thread(entry, arg, kstack_.top(), satp::read().bits()),
-                kstack: kstack_,
-                proc: None,
-            })
-        }
+            self.context.append_initial_arguments(args);
+        } 
     }
 
     pub unsafe fn new_user(data: &[u8]) -> Box<Thread> {
@@ -118,6 +134,9 @@ impl KernelStack {
         };
         KernelStack(bottom)
     }
+    pub fn new_empty() -> Self {
+        KernelStack(0)
+    }
     pub fn top(&self) -> usize {
         self.0 + KERNEL_STACK_SIZE
     }
@@ -125,12 +144,16 @@ impl KernelStack {
 
 impl Drop for KernelStack {
     fn drop(&mut self) {
-        unsafe {
-            dealloc(
-                self.0 as _,
-                Layout::from_size_align(KERNEL_STACK_SIZE, KERNEL_STACK_SIZE).unwrap(),
-            );
+        if self.0 != 0 {
+            unsafe {
+                dealloc(
+                    self.0 as _,
+                    Layout::from_size_align(KERNEL_STACK_SIZE, KERNEL_STACK_SIZE).unwrap(),
+                );
+            }
+        
         }
+        
     }
 }
 
