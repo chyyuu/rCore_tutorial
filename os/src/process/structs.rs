@@ -26,7 +26,7 @@ use core::str;
 pub struct Thread {
     pub context: Context,
     pub kstack: KernelStack,
-    pub proc: Option<Arc<Process>>,
+    //pub proc: Option<Arc<Process>>,
 }
 impl Thread {
     /*
@@ -46,7 +46,7 @@ impl Thread {
         Box::new(Thread {
             context: Context::null(),
             kstack: KernelStack::new_empty(),
-            proc: None,
+            //proc: None,
         })
     }
 
@@ -56,7 +56,7 @@ impl Thread {
             Box::new(Thread {
                 context: Context::new_kernel_thread(entry, kstack_.top(), satp::read().bits()),
                 kstack: kstack_,
-                proc: None,
+                //proc: None,
             })
         }
     }
@@ -107,6 +107,7 @@ impl Thread {
             Thread {
                 context: Context::new_user_thread(entry_addr, ustack_top, kstack.top(), vm.token()),
                 kstack: kstack,
+                /*
                 proc: Some(
                     Arc::new(
                         Process {
@@ -114,6 +115,7 @@ impl Thread {
                         }
                     ),
                 ),
+                */
             }
         )
     }
@@ -165,9 +167,11 @@ pub enum Status {
     Exited(ExitCode),
 }
 
+/*
 pub struct Process {
     vm: Arc<MemorySet>,
 }
+*/
 
 trait ElfExt {
     fn make_memory_set(&self) -> MemorySet;
